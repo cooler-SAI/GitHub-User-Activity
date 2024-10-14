@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func main() {
-	fmt.Println(" base API project CLI")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: github-activity <username>")
+		return
+	}
+
+	username := os.Args[1]
+	fmt.Printf("Fetching activity for user: %s\n", username)
 }
