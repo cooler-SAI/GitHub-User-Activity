@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type Event struct {
@@ -48,12 +50,21 @@ func fetchUserActivity(username string) ([]Event, error) {
 }
 
 func main() {
+	var username string
+
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: github-activity <username>")
-		return
+		fmt.Println("Please enter the GitHub username. Example: github-activity <username>")
+
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("github-activity ")
+		input, _ := reader.ReadString('\n')
+
+		username = strings.TrimSpace(input)
+	} else {
+
+		username = os.Args[1]
 	}
 
-	username := os.Args[1]
 	fmt.Printf("Fetching activity for user: %s\n", username)
 
 	events, err := fetchUserActivity(username)
