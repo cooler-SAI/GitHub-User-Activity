@@ -23,8 +23,8 @@ type Event struct {
 	} `json:"repo"`
 }
 
-func fetchUserActivity(username string) ([]Event, error) {
-	url := fmt.Sprintf("https://api.github.com/users/%s/events", username)
+func fetchUserActivity(apiURL, username string) ([]Event, error) {
+	url := fmt.Sprintf("%s/users/%s/events", apiURL, username)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -98,7 +98,8 @@ func main() {
 		log.Info().Msg("Program Closed!")
 		return
 	default:
-		events, err := fetchUserActivity(username)
+		events, err := fetchUserActivity("https://api.github.com", username)
+
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to fetch events")
 			return
