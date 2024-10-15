@@ -57,7 +57,9 @@ func fetchUserActivity(username string) ([]Event, error) {
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+
 	log.Info().Msg("This is an info message. You are using Zerolog!")
+	os.Stderr.Sync()
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -74,8 +76,8 @@ func main() {
 	var username string
 
 	if len(os.Args) < 2 {
-		fmt.Println("Please provide a username")
-		fmt.Println("Please enter the GitHub username. Example: github-activity <username>")
+		log.Info().Msg("Please provide a username")
+		log.Info().Msg("Please enter the GitHub username. Example: github-activity <username>")
 
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("github-activity ")
@@ -86,7 +88,7 @@ func main() {
 		username = os.Args[1]
 	}
 
-	fmt.Printf("Fetching activity for user: %s\n", username)
+	log.Info().Msgf("Fetching activity for user: %s", username)
 
 	select {
 	case <-ctx.Done():
