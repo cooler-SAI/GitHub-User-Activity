@@ -2,12 +2,18 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 )
 
 type Event struct {
@@ -50,9 +56,25 @@ func fetchUserActivity(username string) ([]Event, error) {
 }
 
 func main() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+	log.Info().Msg("This is an info message. You are using Zerolog!")
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		<-sigChan
+		log.Info().Msg("Received interrupt signal, closing program...")
+		cancel()
+	}()
+
 	var username string
 
 	if len(os.Args) < 2 {
+		fmt.Println("Please provide a username")
 		fmt.Println("Please enter the GitHub username. Example: github-activity <username>")
 
 		reader := bufio.NewReader(os.Stdin)
@@ -61,19 +83,26 @@ func main() {
 
 		username = strings.TrimSpace(input)
 	} else {
-
 		username = os.Args[1]
 	}
 
 	fmt.Printf("Fetching activity for user: %s\n", username)
 
-	events, err := fetchUserActivity(username)
-	if err != nil {
-		fmt.Println("Error fetching activity:", err)
+	select {
+	case <-ctx.Done():
+		log.Info().Msg("Program Closed!")
 		return
+	default:
+		events, err := fetchUserActivity(username)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to fetch events")
+			return
+		}
+
+		for _, event := range events {
+			fmt.Printf("%s event at %s\n", event.Type, event.Repo.Name)
+		}
 	}
 
-	for _, event := range events {
-		fmt.Printf("%s event at %s\n", event.Type, event.Repo.Name)
-	}
+	log.Info().Msg("Program Closed!")
 }
