@@ -59,7 +59,10 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 
 	log.Info().Msg("This is an info message. You are using Zerolog!")
-	os.Stderr.Sync()
+	err := os.Stderr.Sync()
+	if err != nil {
+		return
+	}
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
